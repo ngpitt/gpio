@@ -26,42 +26,30 @@ package gpio
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 )
+
+type GpioObj struct {
+	pinDescriptors map[int]*pinDescriptor
+}
+
+type Gpio interface {
+	Write(pin int, value int)
+	Close()
+}
 
 type pinDescriptor struct {
 	value     *os.File
 	direction *os.File
 }
 
-type GpioObj struct {
-	pinDescriptors map[int]pinDescriptor
-}
-
-type Gpio interface {
-	Write(pin int, value int) error
-	Close()
-}
-
 func NewGpio() Gpio {
-	return &GpioObj{make(map[int]pinDescriptor)}
+	return &GpioObj{make(map[int]*pinDescriptor)}
 }
 
-func export(pin int) error {
-	return ioutil.WriteFile("/sys/class/gpio/export", []byte(strconv.Itoa(pin)), 0644)
-}
-
-func unexport(pin int) error {
-	return ioutil.WriteFile("/sys/class/gpio/unexport", []byte(strconv.Itoa(pin)), 0644)
-}
-
-func isExported(pin int) bool {
-	_, err := os.Stat(fmt.Sprintf("/sys/class/gpio/gpio%d", pin))
-	return !os.IsNotExist(err)
-}
-
-func (o *GpioObj) Write(pin int, value int) error {
+func (o *GpioObj) Write(pin int, value int) {
 	pd, exists := o.pinDescriptors[pin]
 	if !exists {
 		if !isExported(pin) {
@@ -70,27 +58,54 @@ func (o *GpioObj) Write(pin int, value int) error {
 		path := fmt.Sprintf("/sys/class/gpio/gpio%d", pin)
 		value, err := os.OpenFile(path+"/value", os.O_WRONLY, 0640)
 		if err != nil {
-			return err
+			log.Panicln(err.Error())
 		}
 		direction, err := os.OpenFile(path+"/direction", os.O_WRONLY, 0640)
 		if err != nil {
-			return err
+			log.Panicln(err.Error())
 		}
-		_, err = direction.Write([]byte("out"))
+		_, err = pd.direction.Write([]byte("out"))
 		if err != nil {
-			return err
+			log.Panicln(err.Error())
 		}
-		pd = pinDescriptor{value, direction}
+		pd := &pinDescriptor{value, direction}
 		o.pinDescriptors[pin] = pd
 	}
 	_, err := pd.value.Write([]byte(strconv.Itoa(value)))
-	return err
+	if err != nil {
+		log.Panicln(err.Error())
+	}
 }
 
 func (o *GpioObj) Close() {
 	for p, pd := range o.pinDescriptors {
-		pd.direction.Close()
-		pd.value.Close()
+		err := pd.direction.Close()
+		if err != nil {
+			log.Panicln(err.Error())
+		}
+		err = pd.value.Close()
+		if err != nil {
+			log.Panicln(err.Error())
+		}
 		unexport(p)
 	}
+}
+
+func export(pin int) {
+	err := ioutil.WriteFile("/sys/class/gpio/export", []byte(strconv.Itoa(pin)), 0644)
+	if err != nil {
+		log.Panicln(err.Error())
+	}
+}
+
+func unexport(pin int) {
+	err := ioutil.WriteFile("/sys/class/gpio/unexport", []byte(strconv.Itoa(pin)), 0644)
+	if err != nil {
+		log.Panicln(err.Error())
+	}
+}
+
+func isExported(pin int) bool {
+	_, err := os.Stat(fmt.Sprintf("/sys/class/gpio/gpio%d", pin))
+	return !os.IsNotExist(err)
 }
