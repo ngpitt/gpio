@@ -2,6 +2,7 @@
 
 // Copyright (c) 2017 Alex Ellis
 // Copyright (c) 2017 Isaac "Ike" Arias
+// Copyright (c) 2017 Nicholas Pitt
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
