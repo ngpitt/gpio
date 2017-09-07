@@ -65,7 +65,7 @@ func (o *GpioObj) Write(pin int, value int) {
 		if err != nil {
 			log.Panicln(err.Error())
 		}
-		_, err = pd.direction.Write([]byte("out"))
+		_, err = direction.Write([]byte("out"))
 		if err != nil {
 			log.Panicln(err.Error())
 		}
