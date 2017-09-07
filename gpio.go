@@ -69,7 +69,7 @@ func (o *GpioObj) Write(pin int, value int) {
 		if err != nil {
 			log.Panicln(err.Error())
 		}
-		pd := &pinDescriptor{value, direction}
+		pd = &pinDescriptor{value, direction}
 		o.pinDescriptors[pin] = pd
 	}
 	_, err := pd.value.Write([]byte(strconv.Itoa(value)))
