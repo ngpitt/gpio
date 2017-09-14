@@ -33,7 +33,7 @@ import (
 )
 
 type GpioObj struct {
-	pinDescriptors map[int]*pinDescriptor
+	pinDescriptors map[int]pinDescriptor
 }
 
 type Gpio interface {
@@ -47,7 +47,7 @@ type pinDescriptor struct {
 }
 
 func NewGpio() Gpio {
-	return &GpioObj{make(map[int]*pinDescriptor)}
+	return &GpioObj{make(map[int]pinDescriptor)}
 }
 
 func (o *GpioObj) Write(pin int, value int) {
@@ -69,7 +69,7 @@ func (o *GpioObj) Write(pin int, value int) {
 		if err != nil {
 			log.Panicln(err.Error())
 		}
-		pd = &pinDescriptor{value, direction}
+		pd = pinDescriptor{value, direction}
 		o.pinDescriptors[pin] = pd
 	}
 	_, err := pd.value.Write([]byte(strconv.Itoa(value)))
