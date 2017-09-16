@@ -38,7 +38,7 @@ type GpioObj struct {
 
 type Gpio interface {
 	Write(pin int, value int)
-	Close()
+	Cleanup()
 }
 
 type pinDescriptor struct {
@@ -78,7 +78,7 @@ func (o *GpioObj) Write(pin int, value int) {
 	}
 }
 
-func (o *GpioObj) Close() {
+func (o *GpioObj) Cleanup() {
 	for p, pd := range o.pinDescriptors {
 		err := pd.direction.Close()
 		if err != nil {
